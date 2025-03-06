@@ -1,0 +1,63 @@
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
+import axios from "axios";
+
+const API_URL = "https://labs.bible.org/api/?passage=random&type=json";
+const CHAT_API = "https://api-inference.huggingface.co/models/gpt-neo";
+
+const VerseVault = () => {
+  const [verse, setVerse] = useState("");
+  const [chatInput, setChatInput] = useState("");
+  const [chatResponse, setChatResponse] = useState("");
+
+  useEffect(() => {
+    fetchVerse();
+  }, []);
+
+  const fetchVerse = async () => {
+    const response = await axios.get(API_URL);
+    setVerse(response.data[0].text);
+  };
+
+  const handleChat = async () => {
+    setChatResponse("Loading...");
+    const response = await axios.post(CHAT_API, {
+      inputs: `What does the Bible say about ${chatInput}?`
+    });
+    setChatResponse(response.data[0].generated_text);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-blue-500 to-indigo-700 p-10 text-center text-white">
+      <motion.h1 className="text-4xl font-bold" animate={{ scale: 1.1 }}>
+        VerseVault
+      </motion.h1>
+      <Card className="mt-10 shadow-xl">
+        <CardContent>
+          <p className="text-xl">{verse}</p>
+        </CardContent>
+      </Card>
+      <div className="mt-10">
+        <Input
+          placeholder="Ask the Bible..."
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          className="mb-4"
+        />
+        <Button onClick={handleChat}>Ask</Button>
+        {chatResponse && (
+          <Card className="mt-4">
+            <CardContent>
+              <p>{chatResponse}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default VerseVault;
